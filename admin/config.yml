@@ -1,0 +1,60 @@
+## ============================================================
+## Beyond Topper — Decap CMS configuration
+## Beginner-friendly. Edit articles in the browser at /admin.
+## ============================================================
+
+backend:
+  name: git-gateway          # Works with Netlify Identity (no GitHub login per editor)
+  branch: main               # IMPORTANT: change to "master" if your repo's main branch is master
+
+# Auto-publish: editorial_workflow OFF = changes go live immediately on save.
+# (Set publish_mode: editorial_workflow if you ever want a Draft -> Review -> Publish flow.)
+
+# Where uploaded images/PDFs are stored and how they are referenced on the live site
+media_folder: "uploads"      # files saved here in the repo
+public_folder: "/uploads"    # URL path used on the live website
+
+# Friendly site URLs shown in the CMS
+site_url: https://beyondtopper.in
+display_url: https://beyondtopper.in
+logo_url: https://beyondtopper.in/og-image.jpg
+
+collections:
+  # ---------- BLOG ARTICLES (new posts, written in Markdown) ----------
+  - name: "blog"
+    label: "📝 Blog Articles"
+    label_singular: "Blog Article"
+    folder: "content/blog"          # new markdown posts live here
+    create: true                    # allow creating new articles
+    slug: "{{slug}}"                # filename = the slug field
+    summary: "{{title}}"
+    sortable_fields: ['commit_date', 'title']
+    preview_path: "blog/{{slug}}"
+    fields:
+      - { label: "SEO Title (browser tab + Google)", name: "title", widget: "string", hint: "Keep under ~60 characters. Example: RE-NEET 2026 Answer Key PDF | Beyond Topper" }
+      - { label: "URL Slug", name: "slug", widget: "string", hint: "Lowercase, words-with-dashes. Example: re-neet-2026-result. This becomes /blog/your-slug" }
+      - { label: "Meta Description (Google snippet)", name: "description", widget: "text", pattern: ['^.{0,165}$', "Keep it under 165 characters"], hint: "1-2 lines. Under 165 characters." }
+      - { label: "Publish Date", name: "date", widget: "datetime", default: "" }
+      - { label: "Author", name: "author", widget: "string", default: "Amit Kumar Dixit" }
+      - { label: "Featured / Social Share Image", name: "image", widget: "image", required: false, default: "/og-image.jpg", hint: "Shows on Google, WhatsApp & Facebook shares." }
+      - { label: "Canonical URL (leave blank for auto)", name: "canonical", widget: "string", required: false, hint: "Usually leave blank — it auto-fills to /blog/your-slug" }
+      - { label: "Article Body", name: "body", widget: "markdown", hint: "Write your article here. Use the toolbar for headings, bold, lists, images, links." }
+      - label: "FAQ (for Google FAQ schema)"
+        name: "faq"
+        widget: "list"
+        required: false
+        label_singular: "FAQ item"
+        summary: "{{fields.question}}"
+        fields:
+          - { label: "Question", name: "question", widget: "string" }
+          - { label: "Answer", name: "answer", widget: "text" }
+
+  # ---------- SITE FILES (edit robots.txt safely if ever needed) ----------
+  - name: "settings"
+    label: "⚙️ Site Settings"
+    files:
+      - name: "robots"
+        label: "robots.txt"
+        file: "robots.txt"
+        fields:
+          - { label: "robots.txt content", name: "body", widget: "text" }

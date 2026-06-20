@@ -1,0 +1,24 @@
+# Beyond Topper — Netlify configuration
+
+[build]
+  publish = "."
+  # Converts new Markdown posts (content/blog/*.md) into HTML pages at /blog/<slug>
+  # with full SEO meta + schema, then leaves all existing files untouched.
+  command = "node build-blog.js"
+
+# Pretty URLs: strips .html from article URLs (e.g. /blog/re-neet-2026-question-paper)
+[build.processing]
+  skip_processing = false
+[build.processing.html]
+  pretty_urls = true
+
+# Force correct content types so Google never sees the sitemap/robots as HTML.
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
