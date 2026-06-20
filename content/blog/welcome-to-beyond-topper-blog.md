@@ -1,16 +1,19 @@
 ---
-title: "Welcome to the Beyond Topper Blog | NEET & JEE Updates"
-slug: "welcome-to-beyond-topper-blog"
-description: "Beyond Topper blog — latest NEET, JEE and board exam updates, free resources, answer keys and study tips by Amit Dixit Sir."
+title: Welcome to the Beyond Topper Blog | NEET & JEE Updates
+slug: welcome-to-beyond-topper-blog
+description: Beyond Topper blog — latest NEET, JEE and board exam updates, free
+  resources, answer keys and study tips by Amit Dixit Sir. Join now!
 date: 2026-06-20
-author: "Amit Kumar Dixit"
-image: "/og-image.jpg"
+author: Amit Kumar Dixit
+image: /og-image.jpg
 canonical: ""
 faq:
-  - question: "How often is the Beyond Topper blog updated?"
-    answer: "We post regularly with NEET, JEE and board exam updates, answer keys, paper analysis and free study resources."
-  - question: "Are the resources free?"
-    answer: "Yes. All study material, notes and answer keys shared on the Beyond Topper blog are completely free."
+  - question: How often is the Beyond Topper blog updated?
+    answer: We post regularly with NEET, JEE and board exam updates, answer keys,
+      paper analysis and free study resources.
+  - question: Are the resources free?
+    answer: Yes. All study material, notes and answer keys shared on the Beyond
+      Topper blog are completely free.
 ---
 
 ## Welcome to the Beyond Topper Blog
