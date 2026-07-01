@@ -966,39 +966,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
           <h2>Book Your Free Demo Class</h2>
           <p>Talk to our counselor, attend a live demo class, and take the free scholarship test — all without any payment.</p>
         </div>
-
-        <!-- ══ SENIOR COUNSELLOR · DIRECT CONNECT ══ -->
-        <style>
-          .bt-counsellor{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#0b1f3a,#132f57);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:16px 18px;margin:0 0 22px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
-          .btc-photo{width:90px;height:90px;border-radius:50%;object-fit:cover;object-position:top center;border:3px solid #ffd34d;flex-shrink:0;background:#1b3a66}
-          .btc-ph{display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.7rem;color:#ffd34d}
-          .btc-info{flex:1;min-width:0}
-          .btc-badge{display:inline-block;background:rgba(255,211,77,.16);color:#ffd34d;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:50px;margin-bottom:6px}
-          .btc-name{color:#fff;font-size:1.12rem;margin:2px 0;font-weight:800;line-height:1.2}
-          .btc-role{color:#b9c7dc;font-size:.8rem;margin:0 0 10px}
-          .btc-actions{display:flex;gap:10px;flex-wrap:wrap}
-          .btc-call,.btc-wa{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:700;font-size:.88rem;padding:9px 16px;border-radius:50px;transition:transform .15s}
-          .btc-call{background:linear-gradient(135deg,#ffd34d,#f5a623);color:#0b1f3a}
-          .btc-wa{background:linear-gradient(135deg,#25d366,#128c7e);color:#fff}
-          .btc-call:hover,.btc-wa:hover{transform:translateY(-2px)}
-          .btc-num{color:#8fa3bf;font-size:.74rem;margin-top:8px;letter-spacing:.3px}
-          @media(max-width:520px){.bt-counsellor{flex-direction:column;text-align:center}.btc-actions{justify-content:center}}
-        </style>
-        <div class="bt-counsellor">
-          <img src="uploads/senior-counsellor.jpg" alt="Beyond Topper Senior Counsellor" class="btc-photo"
-               data-alt="uploads/senior-counsellor.jpeg|uploads/senior-counsellor.png|uploads/senior-counsellor.webp"
-               onerror="(function(i){var a=(i.getAttribute('data-alt')||'').split('|').filter(Boolean);if(a.length){i.setAttribute('data-alt',a.slice(1).join('|'));i.src=a[0];}else{i.onerror=null;var d=document.createElement('div');d.className='btc-photo btc-ph';d.textContent='SC';i.replaceWith(d);}})(this)">
-          <div class="btc-info">
-            <div class="btc-badge">👩‍🏫 Talk to a real person</div>
-            <h3 class="btc-name">Senior Counsellor</h3>
-            <p class="btc-role">Beyond Topper · Admissions &amp; Guidance</p>
-            <div class="btc-actions">
-              <a href="tel:+916350631020" class="btc-call">📞 Call Now</a>
-              <a href="https://wa.me/916350631020?text=Hi%2C%20I%20want%20guidance%20about%20Beyond%20Topper%20batches%20%26%20admission." target="_blank" rel="noopener" class="btc-wa">💬 WhatsApp</a>
-            </div>
-            <div class="btc-num">Direct: +91 63506 31020</div>
-          </div>
-        </div>
         <form class="sf" onsubmit="handleSch(event)">
           <div class="fr">
             <div class="fg"><label>Student Name *</label><input type="text" placeholder="Full name" required=""></div>
