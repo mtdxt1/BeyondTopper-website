@@ -7,6 +7,10 @@
 [functions]
   node_bundler = "esbuild"
 
+  # Auto-install dependencies from netlify/functions/package.json
+  [[plugins]]
+    package = "@netlify/plugin-functions-install-core"
+
 # Daily reminder scan at 09:00 IST (03:30 UTC)
 [functions."send-reminders"]
   schedule = "30 3 * * *"
