@@ -1,24 +1,27 @@
-# Beyond Topper — Netlify configuration
+# Netlify config — Beyond Topper Fee Deposit System
 
 [build]
   publish = "."
-  # Converts new Markdown posts (content/blog/*.md) into HTML pages at /blog/<slug>
-  # with full SEO meta + schema, then leaves all existing files untouched.
-  command = "node build-blog.js"
+  functions = "netlify/functions"
 
-# Pretty URLs: strips .html from article URLs (e.g. /blog/re-neet-2026-question-paper)
-[build.processing]
-  skip_processing = false
-[build.processing.html]
-  pretty_urls = true
+[functions]
+  node_bundler = "esbuild"
 
-# Force correct content types so Google never sees the sitemap/robots as HTML.
+# Daily reminder scan at 09:00 IST (03:30 UTC)
+[functions."send-reminders"]
+  schedule = "30 3 * * *"
+
+# Security headers
 [[headers]]
-  for = "/sitemap.xml"
+  for = "/*"
   [headers.values]
-    Content-Type = "application/xml; charset=utf-8"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
 
-[[headers]]
-  for = "/robots.txt"
-  [headers.values]
-    Content-Type = "text/plain; charset=utf-8"
+# Admin folder — password protected via Basic Auth (Netlify _headers alternative)
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin/:splat"
+  status = 200
