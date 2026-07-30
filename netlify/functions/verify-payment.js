@@ -78,9 +78,14 @@ async function saveToAirtable(d, paymentId) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ records: [{ fields }] })
+    body: JSON.stringify({ records: [{ fields }], typecast: true })
   });
-  if (!res.ok) throw new Error(`Airtable ${res.status}: ${await res.text()}`);
+  if (!res.ok) {
+    const errText = await res.text();
+    console.error(`Airtable save failed [${res.status}]:`, errText);
+    throw new Error(`Airtable ${res.status}: ${errText}`);
+  }
+  console.log('Airtable save success for receipt:', fields['Receipt No']);
 }
 
 /* ---------- WhatsApp ---------- */
