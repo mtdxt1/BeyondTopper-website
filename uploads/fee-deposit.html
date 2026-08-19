@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fee Deposit / फीस जमा करें — Beyond Topper</title>
+<meta name="description" content="Deposit your NEET / JEE / Board exam course fee at Beyond Topper. Secure online payment with instant receipt." />
+<link rel="icon" href="/favicon.ico" />
+
+<!-- Tailwind CDN (no build step needed) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Razorpay Checkout -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<!-- jsPDF for client-side receipt generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  :root { --brand:#1e40af; --brand2:#f59e0b; --ok:#16a34a; --err:#dc2626; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .brand-btn{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;}
+  .brand-btn:hover{filter:brightness(1.05);}
+  .step-chip{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#e5e7eb;color:#374151;font-weight:700;font-size:.85rem;}
+  .step-chip.active{background:#1e40af;color:#fff;}
+  input:invalid:not(:focus):not(:placeholder-shown){border-color:#dc2626;}
+  .req::after{content:" *";color:#dc2626;}
+  .installment-row td{padding:.5rem .75rem;border-bottom:1px solid #e5e7eb;font-size:.9rem;}
+  @keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+  .pop{animation:pop .4s ease-out;}
+</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+<!-- ============ HEADER ============ -->
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="max-w-5xl mx-auto flex items-center justify-between p-4">
+    <a href="/" class="flex items-center gap-2">
+      <div class="w-9 h-9 rounded-lg brand-btn flex items-center justify-center font-bold">BT</div>
+      <div>
+        <div class="font-bold text-gray-900">Beyond Topper</div>
+        <div class="text-xs text-gray-500">Amit Dixit Sir | Kanpur</div>
+      </div>
+    </a>
+    <a href="/" class="text-sm text-gray-600 hover:text-blue-700">← Home</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="bg-gradient-to-br from-blue-700 to-blue-500 text-white py-8">
+  <div class="max-w-5xl mx-auto px-4 text-center">
+    <h1 class="text-2xl md:text-3xl font-bold">Fee Deposit / फीस जमा करें</h1>
+    <p class="opacity-90 mt-2 text-sm md:text-base">Secure online payment • Instant receipt • WhatsApp confirmation</p>
+    <div class="mt-4 flex items-center justify-center gap-2 text-xs md:text-sm">
+      <span id="stepChip1" class="step-chip active">1</span><span class="opacity-80">Details</span>
+      <span class="opacity-50">›</span>
+      <span id="stepChip2" class="step-chip">2</span><span class="opacity-80">Course</span>
+      <span class="opacity-50">›</span>
+      <span id="stepChip3" class="step-chip">3</span><span class="opacity-80">Payment</span>
+      <span class="opacity-50">›</span>
+      <span id="stepChip4" class="step-chip">4</span><span class="opacity-80">Receipt</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MAIN FORM ============ -->
+<main class="max-w-3xl mx-auto p-4 md:p-6">
+  <form id="feeForm" class="bg-white rounded-xl shadow p-5 md:p-7 space-y-6" novalidate autocomplete="on">
+
+    <!-- Honeypot (anti-spam) -->
+    <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" />
+
+    <!-- ===== SECTION 1: STUDENT DETAILS ===== -->
+    <fieldset>
+      <legend class="text-lg font-bold text-blue-800 mb-3">👤 Student Details / छात्र विवरण</legend>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium req">Student Full Name</label>
+          <input id="studentName" required minlength="3" placeholder="e.g. Aarav Sharma" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium req">Father's Name</label>
+          <input id="fatherName" required minlength="3" placeholder="e.g. Rajesh Sharma" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Mother's Name</label>
+          <input id="motherName" placeholder="e.g. Sunita Sharma" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Date of Birth</label>
+          <input type="date" id="dob" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium req">Mobile Number</label>
+          <input type="tel" id="mobile" required pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10-digit number" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">WhatsApp Number</label>
+          <input type="tel" id="whatsapp" pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10-digit number" class="w-full mt-1 border rounded-lg px-3 py-2" />
+          <label class="text-xs text-gray-600 flex items-center gap-1 mt-1">
+            <input type="checkbox" id="sameAsMobile" /> Same as mobile
+          </label>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Email</label>
+          <input type="email" id="email" placeholder="parent@example.com" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Aadhaar (optional)</label>
+          <input type="text" id="aadhaar" pattern="[0-9]{12}" maxlength="12" placeholder="12 digits" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div class="md:col-span-2">
+          <label class="text-sm font-medium req">Full Address</label>
+          <textarea id="address" required rows="2" placeholder="House / Street / Locality" class="w-full mt-1 border rounded-lg px-3 py-2"></textarea>
+        </div>
+        <div>
+          <label class="text-sm font-medium">City</label>
+          <input id="city" placeholder="Kanpur" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium">State</label>
+          <input id="state" placeholder="Uttar Pradesh" value="Uttar Pradesh" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-medium req">PIN Code</label>
+          <input id="pincode" required pattern="[1-9][0-9]{5}" maxlength="6" placeholder="6-digit PIN" class="w-full mt-1 border rounded-lg px-3 py-2" />
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ===== SECTION 2: COURSE SELECTION ===== -->
+    <fieldset class="border-t pt-5">
+      <legend class="text-lg font-bold text-blue-800 mb-3">📚 Course Selection / कोर्स चयन</legend>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <label class="text-sm font-medium">Select Class</label>
+          <select id="classSel" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+            <option value="">-- Select Class --</option>
+            <option>Class 6</option><option>Class 7</option><option>Class 8</option>
+            <option>Class 9</option><option>Class 10</option><option>Class 11</option>
+            <option>Class 12</option><option>Dropper</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Select Course</label>
+          <select id="courseSel" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white" disabled>
+            <option value="">-- First select class --</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Target Year of Exam</label>
+          <select id="targetYear" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+            <option value="">-- Select Year --</option>
+            <option>2026</option><option>2027</option><option>2028</option>
+            <option>2029</option><option>2030</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Batch Mode</label>
+          <select id="batchMode" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+            <option value="">-- Select Mode --</option>
+            <option>Online</option><option>Offline</option><option>Hybrid</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="feeBox" class="hidden mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex flex-wrap justify-between gap-2 text-sm">
+          <span class="text-gray-700">Course Fee (Total):</span>
+          <span class="font-bold text-blue-900 text-lg">₹<span id="totalFeeDisplay">0</span></span>
+        </div>
+        <div class="mt-2 text-xs text-gray-600" id="feeNote"></div>
+      </div>
+    </fieldset>
+
+    <!-- ===== SECTION 3: PAYMENT PLAN ===== -->
+    <fieldset class="border-t pt-5">
+      <legend class="text-lg font-bold text-blue-800 mb-3">💰 Payment Plan / भुगतान योजना</legend>
+
+      <div class="space-y-2">
+        <label class="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+          <input type="radio" name="payPlan" value="full" checked class="mt-1" />
+          <div>
+            <div class="font-semibold">Full Payment (One-time) <span class="text-green-700 text-xs">— 5% discount</span></div>
+            <div class="text-xs text-gray-600">एक साथ पूरी फीस जमा करें और 5% छूट पाएं।</div>
+          </div>
+        </label>
+        <label class="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+          <input type="radio" name="payPlan" value="part" class="mt-1" />
+          <div>
+            <div class="font-semibold">Part Payment / Installments</div>
+            <div class="text-xs text-gray-600">2 / 3 / 4 installments में जमा करें (max 4 months)।</div>
+          </div>
+        </label>
+        <label class="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 border-amber-300 bg-amber-50">
+          <input type="radio" name="payPlan" value="any" class="mt-1" />
+          <div class="flex-1">
+            <div class="font-semibold">💰 Pay Any Amount <span class="text-amber-700 text-xs">— जितनी राशि आप देना चाहें</span></div>
+            <div class="text-xs text-gray-600">कोई भी amount type करें (min ₹1)। Course fee tracking अलग से हो सकती है।</div>
+          </div>
+        </label>
+      </div>
+
+      <div id="anyAmountBox" class="hidden mt-4 bg-amber-50 border border-amber-300 rounded-lg p-4">
+        <label class="text-sm font-medium">Enter Amount to Deposit / जमा राशि (₹)</label>
+        <input type="number" id="anyAmount" min="1" step="1" placeholder="e.g. 10000" class="w-full mt-1 border border-amber-400 rounded-lg px-3 py-2 text-lg font-semibold" />
+        <p class="text-xs text-gray-600 mt-1">आप 5,000, 10,000, 25,000 — कोई भी amount enter कर सकते हैं।</p>
+      </div>
+
+      <div id="installmentBox" class="hidden mt-4">
+        <label class="text-sm font-medium">Number of Installments</label>
+        <select id="numInstall" class="mt-1 border rounded-lg px-3 py-2 bg-white">
+          <option value="2">2 Installments (0, +60 days)</option>
+          <option value="3">3 Installments (0, +45, +90 days)</option>
+          <option value="4" selected>4 Installments (0, +30, +60, +90 days)</option>
+        </select>
+
+        <div class="mt-3 overflow-x-auto">
+          <table class="w-full text-sm border rounded-lg overflow-hidden">
+            <thead class="bg-blue-100 text-blue-900">
+              <tr><th class="p-2 text-left">#</th><th class="p-2 text-left">Amount</th><th class="p-2 text-left">Due Date</th></tr>
+            </thead>
+            <tbody id="installmentTable"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">⚠️ Full fee must be cleared within 4 months (120 days) of first payment.</p>
+      </div>
+    </fieldset>
+
+    <!-- ===== SUMMARY ===== -->
+    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+      <div class="flex justify-between text-sm"><span>Total Course Fee:</span><span>₹<span id="sumTotal">0</span></span></div>
+      <div class="flex justify-between text-sm text-green-700"><span>Discount:</span><span>- ₹<span id="sumDiscount">0</span></span></div>
+      <div class="flex justify-between text-base font-bold border-t pt-2 mt-2"><span>Amount Payable Today:</span><span>₹<span id="sumPayNow">0</span></span></div>
+      <div class="flex justify-between text-xs text-gray-600 mt-1"><span>Balance after this payment:</span><span>₹<span id="sumBalance">0</span></span></div>
+    </div>
+
+    <!-- Terms -->
+    <label class="flex items-start gap-2 text-xs text-gray-600">
+      <input type="checkbox" id="agree" required class="mt-1" />
+      <span>I agree to Beyond Topper's <a href="/terms.html" class="text-blue-700 underline">terms</a> and <a href="/refund.html" class="text-blue-700 underline">refund policy</a>. फीस जमा करने के बाद refund policy लागू होगी।</span>
+    </label>
+
+    <!-- Submit -->
+    <button type="submit" id="payBtn" class="w-full py-3 rounded-lg brand-btn font-bold text-lg disabled:opacity-60">
+      Pay Securely with Razorpay →
+    </button>
+    <p class="text-center text-xs text-gray-500">🔒 100% Secure • Powered by Razorpay • UPI / Card / Netbanking / Wallets</p>
+  </form>
+</main>
+
+<!-- ============ SUCCESS MODAL ============ -->
+<div id="successModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl p-6 max-w-md w-full pop">
+    <div class="text-6xl text-center">🎉</div>
+    <h2 class="text-2xl font-bold text-center text-green-700 mt-2">Payment Successful!</h2>
+    <p class="text-center text-gray-600 mt-1">आपकी फीस सफलतापूर्वक जमा हो गई है।</p>
+    <div class="bg-green-50 rounded-lg p-3 mt-4 text-sm">
+      <div class="flex justify-between"><span>Receipt No:</span><b id="doneReceiptNo">-</b></div>
+      <div class="flex justify-between"><span>Amount Paid:</span><b>₹<span id="doneAmount">-</span></b></div>
+      <div class="flex justify-between"><span>Balance:</span><b>₹<span id="doneBalance">-</span></b></div>
+      <div class="flex justify-between" id="doneNextDueRow"><span>Next Due:</span><b id="doneNextDue">-</b></div>
+    </div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="downloadReceipt()" class="flex-1 py-2 rounded-lg brand-btn font-semibold">⬇️ Download Receipt</button>
+      <button onclick="window.print()" class="flex-1 py-2 rounded-lg bg-gray-200 font-semibold">🖨️ Print</button>
+    </div>
+    <button onclick="location.reload()" class="w-full mt-2 text-sm text-blue-700 underline">New payment / नया payment</button>
+  </div>
+</div>
+
+<footer class="text-center text-xs text-gray-500 py-6">
+  © Beyond Topper • beyondtopper.in • Amit Dixit Sir • Kanpur, UP
+</footer>
+
+<script>
+/* =============================================================
+   FEE CONFIG — Sir, यहाँ अपने हिसाब से fee edit करें
+   Format: courses[Class][CourseName] = totalFee
+   ============================================================= */
+const FEE_CONFIG = {
+  "Class 6":  { "Foundation": 18000 },
+  "Class 7":  { "Foundation": 20000 },
+  "Class 8":  { "Foundation": 22000 },
+  "Class 9":  { "Foundation": 26000, "Board Exam Booster": 15000 },
+  "Class 10": { "Foundation": 28000, "Board Exam Booster": 18000 },
+  "Class 11": { "NEET": 55000, "JEE": 55000, "Board Exam Booster": 20000 },
+  "Class 12": { "NEET": 60000, "JEE": 60000, "Board Exam Booster": 22000, "Crash Course": 25000 },
+  "Dropper":  { "NEET": 75000, "JEE": 75000, "Crash Course": 30000 }
+};
+
+const INSTITUTE = {
+  name: "Beyond Topper",
+  tagline: "By Amit Dixit Sir — NEET / JEE / Foundation / Board",
+  address: "Kanpur, Uttar Pradesh, India",
+  phone: "+91-XXXXXXXXXX",  // Sir apna number daalein
+  email: "janchpathology@gmail.com",
+  gstin: "",                // Sir GSTIN available ho to yahaan daalein
+  website: "beyondtopper.in"
+};
+
+/* ============ Helpers ============ */
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('en-IN');
+const today = new Date();
+const addDays = (d, days) => { const x = new Date(d); x.setDate(x.getDate()+days); return x; };
+const fmtDate = d => d.toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'});
+
+/* ============ Dependent Dropdown ============ */
+$('classSel').addEventListener('change', e => {
+  const cls = e.target.value;
+  const cs = $('courseSel');
+  cs.innerHTML = '<option value="">-- Select Course --</option>';
+  if (!cls || !FEE_CONFIG[cls]) { cs.disabled = true; return; }
+  Object.keys(FEE_CONFIG[cls]).forEach(c => {
+    cs.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+  cs.disabled = false;
+  updateFee();
+});
+
+$('courseSel').addEventListener('change', updateFee);
+$('targetYear').addEventListener('change', updateFee);
+
+function getTotalFee() {
+  const cls = $('classSel').value, course = $('courseSel').value;
+  return (FEE_CONFIG[cls] && FEE_CONFIG[cls][course]) ? FEE_CONFIG[cls][course] : 0;
+}
+function updateFee() {
+  const fee = getTotalFee();
+  $('feeBox').classList.toggle('hidden', !fee);
+  $('totalFeeDisplay').innerText = fmt(fee);
+  $('feeNote').innerText = fee ? "Fee includes study material and test series." : "";
+  computeSummary();
+  buildInstallmentTable();
+}
+
+/* ============ WhatsApp same-as-mobile ============ */
+$('sameAsMobile').addEventListener('change', e => {
+  if (e.target.checked) $('whatsapp').value = $('mobile').value;
+});
+$('mobile').addEventListener('input', () => {
+  if ($('sameAsMobile').checked) $('whatsapp').value = $('mobile').value;
+});
+
+/* ============ Payment plan toggle ============ */
+document.querySelectorAll('input[name="payPlan"]').forEach(r => r.addEventListener('change', () => {
+  const plan = getPayPlan();
+  $('installmentBox').classList.toggle('hidden', plan !== 'part');
+  $('anyAmountBox').classList.toggle('hidden', plan !== 'any');
+  buildInstallmentTable();
+  computeSummary();
+}));
+$('numInstall').addEventListener('change', () => { buildInstallmentTable(); computeSummary(); });
+$('anyAmount').addEventListener('input', computeSummary);
+
+function getPayPlan(){ return document.querySelector('input[name="payPlan"]:checked').value; }
+
+/* ============ Installment schedule ============ */
+function buildInstallmentTable() {
+  const total = getTotalFee();
+  const n = parseInt($('numInstall').value);
+  if (!total || getPayPlan() !== 'part') { $('installmentTable').innerHTML=''; return; }
+  const per = Math.round(total / n);
+  const gaps = n===2 ? [0,60] : n===3 ? [0,45,90] : [0,30,60,90];
+  let html = '';
+  gaps.forEach((g,i) => {
+    const amt = (i === gaps.length-1) ? (total - per*(gaps.length-1)) : per;
+    const due = addDays(today, g);
+    html += `<tr class="installment-row"><td>${i+1}${i===0?' (Today)':''}</td><td>₹${fmt(amt)}</td><td>${fmtDate(due)}</td></tr>`;
+  });
+  $('installmentTable').innerHTML = html;
+}
+
+/* ============ Summary calculation ============ */
+function computeSummary() {
+  const total = getTotalFee();
+  const plan = getPayPlan();
+  let discount = 0, payNow = 0, balance = 0;
+
+  if (plan === 'full') {
+    discount = Math.round(total * 0.05);
+    payNow = total - discount;
+    balance = 0;
+  } else if (plan === 'part') {
+    const n = parseInt($('numInstall').value);
+    payNow = Math.round(total / n);
+    balance = total - payNow;
+  } else if (plan === 'any') {
+    const anyAmt = parseInt($('anyAmount').value) || 0;
+    payNow = anyAmt;
+    balance = Math.max(0, total - anyAmt);
+  }
+  $('sumTotal').innerText = fmt(total);
+  $('sumDiscount').innerText = fmt(discount);
+  $('sumPayNow').innerText = fmt(payNow);
+  $('sumBalance').innerText = fmt(balance);
+  // Update pay button label
+  const btn = $('payBtn');
+  if (btn && !btn.disabled) btn.innerText = payNow > 0 ? `Pay ₹${fmt(payNow)} Securely →` : 'Pay Securely with Razorpay →';
+  return { total, discount, payNow, balance };
+}
+
+/* ============ Receipt No generator (client-side fallback) ============ */
+function genReceiptNo() {
+  const yr = today.getFullYear();
+  const fy = today.getMonth() >= 3 ? `${yr}-${(yr+1).toString().slice(2)}` : `${yr-1}-${yr.toString().slice(2)}`;
+  const seq = String(Date.now()).slice(-5);
+  return `BT/${fy}/${seq}`;
+}
+
+/* ============ Collect form data ============ */
+function collectData() {
+  const s = computeSummary();
+  const plan = getPayPlan();
+  const nextDue = plan === 'part'
+    ? addDays(today, parseInt($('numInstall').value)===2 ? 60 : parseInt($('numInstall').value)===3 ? 45 : 30)
+    : null;
+
+  return {
+    receiptNo: genReceiptNo(),
+    date: today.toISOString(),
+    student: {
+      name: $('studentName').value.trim(),
+      fatherName: $('fatherName').value.trim(),
+      motherName: $('motherName').value.trim(),
+      dob: $('dob').value,
+      mobile: $('mobile').value.trim(),
+      whatsapp: ($('whatsapp').value || $('mobile').value).trim(),
+      email: $('email').value.trim(),
+      aadhaar: $('aadhaar').value.trim(),
+      address: $('address').value.trim(),
+      city: $('city').value.trim(),
+      state: $('state').value.trim(),
+      pincode: $('pincode').value.trim()
+    },
+    course: {
+      class: $('classSel').value,
+      name: $('courseSel').value,
+      targetYear: $('targetYear').value,
+      batchMode: $('batchMode').value
+    },
+    payment: {
+      plan,
+      installments: plan === 'part' ? parseInt($('numInstall').value) : 1,
+      totalFee: s.total,
+      discount: s.discount,
+      paidToday: s.payNow,
+      balance: s.balance,
+      nextDueDate: nextDue ? nextDue.toISOString() : null
+    }
+  };
+}
+
+/* ============ Submit → Razorpay ============ */
+let LAST_DATA = null;
+
+$('feeForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!$('feeForm').checkValidity()) { $('feeForm').reportValidity(); return; }
+  const plan = getPayPlan();
+  if (plan !== 'any' && !getTotalFee()) { alert("कृपया Class और Course select करें।"); return; }
+  if (plan === 'any') {
+    const anyAmt = parseInt($('anyAmount').value);
+    if (!anyAmt || anyAmt < 1) { alert("कृपया valid amount enter करें (min ₹1)।"); $('anyAmount').focus(); return; }
+  }
+  if (!$('agree').checked) { alert("कृपया terms accept करें।"); return; }
+  if (document.querySelector('input[name="website"]').value) return; // honeypot
+
+  const data = collectData();
+  LAST_DATA = data;
+  const payBtn = $('payBtn');
+  payBtn.disabled = true; payBtn.innerText = "Processing...";
+
+  try {
+    if (data.payment.paidToday < 1) throw new Error("Amount must be at least ₹1");
+
+    // Ask backend to create Razorpay order (amount in paise)
+    const res = await fetch('/.netlify/functions/create-order', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amount: Math.round(data.payment.paidToday * 100), receiptNo: data.receiptNo })
+    });
+    const order = await res.json();
+    if (!order.id) {
+      // Show detailed error to user (no secrets leaked, just Razorpay error text)
+      const detail = order.error || 'Unknown error';
+      const code = order.code ? ` [${order.code}]` : '';
+      const mode = order.mode ? ` (${order.mode} mode)` : '';
+      const hint = order.hint ? `\n\n💡 ${order.hint}` : '';
+      throw new Error(`Payment order banane me error${mode}${code}:\n${detail}${hint}`);
+    }
+
+    const rzp = new Razorpay({
+      key: order.keyId,
+      amount: order.amount,
+      currency: "INR",
+      name: INSTITUTE.name,
+      description: `${data.course.name} — ${data.course.class} (${data.course.targetYear})`,
+      order_id: order.id,
+      prefill: {
+        name: data.student.name,
+        email: data.student.email,
+        contact: data.student.mobile
+      },
+      notes: { receiptNo: data.receiptNo, course: data.course.name, class: data.course.class },
+      theme: { color: "#1e40af" },
+      handler: async (rp) => {
+        // Verify + save
+        try {
+          const v = await fetch('/.netlify/functions/verify-payment', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              razorpay_order_id: rp.razorpay_order_id,
+              razorpay_payment_id: rp.razorpay_payment_id,
+              razorpay_signature: rp.razorpay_signature,
+              data: data
+            })
+          });
+          const j = await v.json();
+          if (!j.ok) throw new Error(j.error || "Verification failed");
+          data.payment.razorpayPaymentId = rp.razorpay_payment_id;
+          LAST_DATA = data;
+          showSuccess(data);
+        } catch(err) {
+          alert("⚠️ Payment received but verification pending. Please screenshot this and contact us: " + rp.razorpay_payment_id);
+        }
+      },
+      modal: { ondismiss: () => { $('payBtn').disabled = false; computeSummary(); } }
+    });
+    rzp.open();
+  } catch (err) {
+    console.error('Payment error full details:', err);
+    alert("⚠️ " + err.message + "\n\n(F12 press karke Console tab me full details dikhega)");
+    $('payBtn').disabled = false;
+    computeSummary(); // restore button label
+  }
+});
+
+/* ============ Success + Receipt ============ */
+function showSuccess(d) {
+  $('doneReceiptNo').innerText = d.receiptNo;
+  $('doneAmount').innerText = fmt(d.payment.paidToday);
+  $('doneBalance').innerText = fmt(d.payment.balance);
+  if (d.payment.nextDueDate) {
+    $('doneNextDue').innerText = fmtDate(new Date(d.payment.nextDueDate));
+  } else {
+    $('doneNextDueRow').classList.add('hidden');
+  }
+  $('successModal').classList.remove('hidden');
+  // Update step chips
+  [1,2,3,4].forEach(i => $('stepChip'+i).classList.add('active'));
+}
+
+/* ============ PDF Receipt (3 copies) ============ */
+function downloadReceipt() {
+  if (!LAST_DATA) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const copies = ["Student Copy / छात्र प्रति", "Institute Copy / संस्थान प्रति", "Bank Copy / बैंक प्रति"];
+
+  copies.forEach((label, idx) => {
+    if (idx > 0) doc.addPage();
+    drawReceipt(doc, LAST_DATA, label);
+  });
+
+  doc.save(`Receipt_${LAST_DATA.receiptNo.replace(/\//g,'-')}.pdf`);
+}
+
+function drawReceipt(doc, d, copyLabel) {
+  const W = 210;
+  // Header
+  doc.setFillColor(30, 64, 175);
+  doc.rect(0, 0, W, 28, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(18); doc.setFont(undefined,'bold');
+  doc.text(INSTITUTE.name, 12, 13);
+  doc.setFontSize(9); doc.setFont(undefined,'normal');
+  doc.text(INSTITUTE.tagline, 12, 19);
+  doc.text(`${INSTITUTE.address} | ${INSTITUTE.phone} | ${INSTITUTE.website}`, 12, 24);
+  // Copy label
+  doc.setFontSize(9);
+  doc.setFillColor(245,158,11);
+  doc.rect(W-62, 6, 55, 8, 'F');
+  doc.setTextColor(255,255,255);
+  doc.text(copyLabel, W-59, 12);
+
+  // Title
+  doc.setTextColor(30,30,30);
+  doc.setFontSize(14); doc.setFont(undefined,'bold');
+  doc.text("FEE RECEIPT / फीस रसीद", 12, 40);
+  doc.setFontSize(9); doc.setFont(undefined,'normal');
+  doc.text(`Receipt No: ${d.receiptNo}`, 12, 46);
+  doc.text(`Date: ${new Date(d.date).toLocaleString('en-IN')}`, W-70, 46);
+
+  // Student box
+  doc.setDrawColor(200); doc.rect(12, 50, W-24, 34);
+  doc.setFontSize(10); doc.setFont(undefined,'bold');
+  doc.text("Student Details", 14, 55);
+  doc.setFont(undefined,'normal'); doc.setFontSize(9);
+  doc.text(`Name: ${d.student.name}`, 14, 61);
+  doc.text(`Father: ${d.student.fatherName}`, 14, 66);
+  doc.text(`Mobile: ${d.student.mobile}   WhatsApp: ${d.student.whatsapp}`, 14, 71);
+  doc.text(`Address: ${d.student.address}, ${d.student.city}, ${d.student.state} - ${d.student.pincode}`, 14, 76, {maxWidth: W-28});
+
+  // Course box
+  doc.rect(12, 88, W-24, 20);
+  doc.setFont(undefined,'bold'); doc.setFontSize(10);
+  doc.text("Course Details", 14, 93);
+  doc.setFont(undefined,'normal'); doc.setFontSize(9);
+  doc.text(`Class: ${d.course.class}   Course: ${d.course.name}`, 14, 99);
+  doc.text(`Target Year: ${d.course.targetYear}   Batch Mode: ${d.course.batchMode}`, 14, 104);
+
+  // Payment table
+  doc.autoTable({
+    startY: 114,
+    theme: 'grid',
+    head: [['Description','Amount (₹)']],
+    body: [
+      ['Total Course Fee', fmt(d.payment.totalFee)],
+      ['Discount', '- ' + fmt(d.payment.discount)],
+      ['Amount Paid Today', fmt(d.payment.paidToday)],
+      ['Balance', fmt(d.payment.balance)]
+    ],
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [30,64,175] }
+  });
+
+  let y = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(9);
+  doc.text(`Payment Mode: Online (Razorpay)`, 14, y);
+  doc.text(`Payment ID: ${d.payment.razorpayPaymentId || '-'}`, 14, y+5);
+  if (d.payment.nextDueDate) {
+    doc.setFont(undefined,'bold'); doc.setTextColor(220,38,38);
+    doc.text(`Next Due Date: ${fmtDate(new Date(d.payment.nextDueDate))}`, 14, y+11);
+    doc.setFont(undefined,'normal'); doc.setTextColor(30,30,30);
+  }
+
+  // Footer
+  doc.setFontSize(8); doc.setTextColor(100);
+  doc.text("This is a computer-generated receipt. No signature required.", 14, 275);
+  doc.text("Refund policy applies as per beyondtopper.in/refund", 14, 280);
+  doc.line(W-60, 265, W-14, 265);
+  doc.text("Authorized Signatory", W-50, 270);
+}
+
+/* Initial state */
+computeSummary();
+</script>
+</body>
+</html>
