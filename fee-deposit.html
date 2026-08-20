@@ -134,8 +134,8 @@
       <legend class="text-lg font-bold text-blue-800 mb-3">📚 Course Selection / कोर्स चयन</legend>
       <div class="grid md:grid-cols-2 gap-4">
         <div>
-          <label class="text-sm font-medium req">Select Class</label>
-          <select id="classSel" required class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+          <label class="text-sm font-medium">Select Class</label>
+          <select id="classSel" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
             <option value="">-- Select Class --</option>
             <option>Class 6</option><option>Class 7</option><option>Class 8</option>
             <option>Class 9</option><option>Class 10</option><option>Class 11</option>
@@ -143,22 +143,22 @@
           </select>
         </div>
         <div>
-          <label class="text-sm font-medium req">Select Course</label>
-          <select id="courseSel" required class="w-full mt-1 border rounded-lg px-3 py-2 bg-white" disabled>
+          <label class="text-sm font-medium">Select Course</label>
+          <select id="courseSel" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white" disabled>
             <option value="">-- First select class --</option>
           </select>
         </div>
         <div>
-          <label class="text-sm font-medium req">Target Year of Exam</label>
-          <select id="targetYear" required class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+          <label class="text-sm font-medium">Target Year of Exam</label>
+          <select id="targetYear" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
             <option value="">-- Select Year --</option>
             <option>2026</option><option>2027</option><option>2028</option>
             <option>2029</option><option>2030</option>
           </select>
         </div>
         <div>
-          <label class="text-sm font-medium req">Batch Mode</label>
-          <select id="batchMode" required class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
+          <label class="text-sm font-medium">Batch Mode</label>
+          <select id="batchMode" class="w-full mt-1 border rounded-lg px-3 py-2 bg-white">
             <option value="">-- Select Mode --</option>
             <option>Online</option><option>Offline</option><option>Hybrid</option>
           </select>
@@ -193,6 +193,19 @@
             <div class="text-xs text-gray-600">2 / 3 / 4 installments में जमा करें (max 4 months)।</div>
           </div>
         </label>
+        <label class="flex items-start gap-2 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 border-amber-300 bg-amber-50">
+          <input type="radio" name="payPlan" value="any" class="mt-1" />
+          <div class="flex-1">
+            <div class="font-semibold">💰 Pay Any Amount <span class="text-amber-700 text-xs">— जितनी राशि आप देना चाहें</span></div>
+            <div class="text-xs text-gray-600">कोई भी amount type करें (min ₹1)। Course fee tracking अलग से हो सकती है।</div>
+          </div>
+        </label>
+      </div>
+
+      <div id="anyAmountBox" class="hidden mt-4 bg-amber-50 border border-amber-300 rounded-lg p-4">
+        <label class="text-sm font-medium">Enter Amount to Deposit / जमा राशि (₹)</label>
+        <input type="number" id="anyAmount" min="1" step="1" placeholder="e.g. 10000" class="w-full mt-1 border border-amber-400 rounded-lg px-3 py-2 text-lg font-semibold" />
+        <p class="text-xs text-gray-600 mt-1">आप 5,000, 10,000, 25,000 — कोई भी amount enter कर सकते हैं।</p>
       </div>
 
       <div id="installmentBox" class="hidden mt-4">
@@ -333,11 +346,14 @@ $('mobile').addEventListener('input', () => {
 
 /* ============ Payment plan toggle ============ */
 document.querySelectorAll('input[name="payPlan"]').forEach(r => r.addEventListener('change', () => {
-  $('installmentBox').classList.toggle('hidden', getPayPlan() !== 'part');
+  const plan = getPayPlan();
+  $('installmentBox').classList.toggle('hidden', plan !== 'part');
+  $('anyAmountBox').classList.toggle('hidden', plan !== 'any');
   buildInstallmentTable();
   computeSummary();
 }));
 $('numInstall').addEventListener('change', () => { buildInstallmentTable(); computeSummary(); });
+$('anyAmount').addEventListener('input', computeSummary);
 
 function getPayPlan(){ return document.querySelector('input[name="payPlan"]:checked').value; }
 
@@ -367,15 +383,22 @@ function computeSummary() {
     discount = Math.round(total * 0.05);
     payNow = total - discount;
     balance = 0;
-  } else {
+  } else if (plan === 'part') {
     const n = parseInt($('numInstall').value);
     payNow = Math.round(total / n);
     balance = total - payNow;
+  } else if (plan === 'any') {
+    const anyAmt = parseInt($('anyAmount').value) || 0;
+    payNow = anyAmt;
+    balance = Math.max(0, total - anyAmt);
   }
   $('sumTotal').innerText = fmt(total);
   $('sumDiscount').innerText = fmt(discount);
   $('sumPayNow').innerText = fmt(payNow);
   $('sumBalance').innerText = fmt(balance);
+  // Update pay button label
+  const btn = $('payBtn');
+  if (btn && !btn.disabled) btn.innerText = payNow > 0 ? `Pay ₹${fmt(payNow)} Securely →` : 'Pay Securely with Razorpay →';
   return { total, discount, payNow, balance };
 }
 
@@ -436,24 +459,38 @@ let LAST_DATA = null;
 $('feeForm').addEventListener('submit', async e => {
   e.preventDefault();
   if (!$('feeForm').checkValidity()) { $('feeForm').reportValidity(); return; }
-  if (!getTotalFee()) { alert("Please select Class and Course."); return; }
-  if (!$('agree').checked) { alert("Please accept the terms."); return; }
-  // Honeypot
-  if (document.querySelector('input[name="website"]').value) return;
+  const plan = getPayPlan();
+  if (plan !== 'any' && !getTotalFee()) { alert("कृपया Class और Course select करें।"); return; }
+  if (plan === 'any') {
+    const anyAmt = parseInt($('anyAmount').value);
+    if (!anyAmt || anyAmt < 1) { alert("कृपया valid amount enter करें (min ₹1)।"); $('anyAmount').focus(); return; }
+  }
+  if (!$('agree').checked) { alert("कृपया terms accept करें।"); return; }
+  if (document.querySelector('input[name="website"]').value) return; // honeypot
 
   const data = collectData();
   LAST_DATA = data;
-  $('payBtn').disabled = true; $('payBtn').innerText = "Processing...";
+  const payBtn = $('payBtn');
+  payBtn.disabled = true; payBtn.innerText = "Processing...";
 
   try {
-    // Ask backend to create Razorpay order
+    if (data.payment.paidToday < 1) throw new Error("Amount must be at least ₹1");
+
+    // Ask backend to create Razorpay order (amount in paise)
     const res = await fetch('/.netlify/functions/create-order', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ amount: data.payment.paidToday * 100, receiptNo: data.receiptNo })
+      body: JSON.stringify({ amount: Math.round(data.payment.paidToday * 100), receiptNo: data.receiptNo })
     });
     const order = await res.json();
-    if (!order.id) throw new Error(order.error || "Order failed");
+    if (!order.id) {
+      // Show detailed error to user (no secrets leaked, just Razorpay error text)
+      const detail = order.error || 'Unknown error';
+      const code = order.code ? ` [${order.code}]` : '';
+      const mode = order.mode ? ` (${order.mode} mode)` : '';
+      const hint = order.hint ? `\n\n💡 ${order.hint}` : '';
+      throw new Error(`Payment order banane me error${mode}${code}:\n${detail}${hint}`);
+    }
 
     const rzp = new Razorpay({
       key: order.keyId,
@@ -491,12 +528,14 @@ $('feeForm').addEventListener('submit', async e => {
           alert("⚠️ Payment received but verification pending. Please screenshot this and contact us: " + rp.razorpay_payment_id);
         }
       },
-      modal: { ondismiss: () => { $('payBtn').disabled = false; $('payBtn').innerText = "Pay Securely with Razorpay →"; } }
+      modal: { ondismiss: () => { $('payBtn').disabled = false; computeSummary(); } }
     });
     rzp.open();
   } catch (err) {
-    alert("Error: " + err.message);
-    $('payBtn').disabled = false; $('payBtn').innerText = "Pay Securely with Razorpay →";
+    console.error('Payment error full details:', err);
+    alert("⚠️ " + err.message + "\n\n(F12 press karke Console tab me full details dikhega)");
+    $('payBtn').disabled = false;
+    computeSummary(); // restore button label
   }
 });
 
